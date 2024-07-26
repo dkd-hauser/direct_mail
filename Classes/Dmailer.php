@@ -391,7 +391,8 @@ class Dmailer implements LoggerAwareInterface
 
             $this->theParts['html']['content'] = '';
             if ($this->flagHtml && (($recipientRow['module_sys_dmail_html'] ?? false) || $tableNameChar == 'P')) {
-                $tempContentHTML = $this->getBoundaryParts($this->dmailer['boundaryParts_html'], $recipientRow['sys_dmail_categories_list']);
+                $sysDmailCategoriesList = $recipientRow['sys_dmail_categories_list'] ?? '';
+                $tempContentHTML = $this->getBoundaryParts($this->dmailer['boundaryParts_html'], $sysDmailCategoriesList);
                 if ($this->mailHasContent) {
                     $this->theParts['html']['content'] = $this->replaceMailMarkers($tempContentHTML, $recipientRow, $additionalMarkers);
                     $returnCode |= 1;
@@ -401,7 +402,8 @@ class Dmailer implements LoggerAwareInterface
             // Plain
             $this->theParts['plain']['content'] = '';
             if ($this->flagPlain) {
-                $tempContentPlain = $this->getBoundaryParts($this->dmailer['boundaryParts_plain'], $recipientRow['sys_dmail_categories_list']);
+                $sysDmailCategoriesList = $recipientRow['sys_dmail_categories_list'] ?? '';
+                $tempContentPlain = $this->getBoundaryParts($this->dmailer['boundaryParts_plain'], $sysDmailCategoriesList);
                 if ($this->mailHasContent) {
                     $tempContentPlain = $this->replaceMailMarkers($tempContentPlain, $recipientRow, $additionalMarkers);
                     if (trim($this->dmailer['sys_dmail_rec']['use_rdct']) || trim($this->dmailer['sys_dmail_rec']['long_link_mode'])) {
@@ -990,7 +992,7 @@ class Dmailer implements LoggerAwareInterface
      */
     protected function substHREFsInHTML(): void
     {
-        if (!is_array($this->theParts['html']['hrefs'])) {
+        if (!isset($this->theParts['html']) || !is_array($this->theParts['html']) || !array_key_exists('hrefs', $this->theParts['html']) || !is_array($this->theParts['html']['hrefs'])) {
             return;
         }
         foreach ($this->theParts['html']['hrefs'] as $urlId => $val) {

@@ -146,7 +146,7 @@ class DirectMailUtility
 
         $htmlmail->start();
         $htmlmail->setCharset($row['charset']);
-        $htmlmail->setSimulateUsergroup($params['simulate_usergroup'] ?? 0);
+        $htmlmail->setSimulateUsergroup((int)($params['simulate_usergroup'] ?? 0));
         $htmlmail->setIncludeMedia($row['includeMedia']);
 
         if ($urls['plainTextUrl']) {
