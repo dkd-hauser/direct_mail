@@ -210,36 +210,36 @@ class SysDmailRepository extends MainRepository
     /**
      * @return array|bool
      */
-    public function selectForMkeListDMail(int $id, string $sOrder, string $ascDesc) //: array|bool
+    public function selectForMkeListDMail(int $pid, string $sOrder, string $ascDesc) //: array|bool
     {
         $queryBuilder = $this->getQueryBuilder($this->table);
-
         $queryBuilder
-        ->getRestrictions()
-        ->removeAll()
-        ->add(GeneralUtility::makeInstance(DeletedRestriction::class));
+            ->getRestrictions()
+            ->removeAll()
+            ->add(GeneralUtility::makeInstance(DeletedRestriction::class));
 
         return $queryBuilder
-        ->select('uid', 'pid', 'subject', 'tstamp', 'issent', 'renderedsize', 'attachment', 'type')
-        ->from($this->table)
-        ->where(
-            $queryBuilder->expr()->eq(
-                'pid',
-                $queryBuilder->createNamedParameter($id, Connection::PARAM_INT)
-            ),
-            $queryBuilder->expr()->eq(
-                'scheduled',
-                $queryBuilder->createNamedParameter(0, Connection::PARAM_INT)
-            ),
-            $queryBuilder->expr()->eq(
-                'issent',
-                $queryBuilder->createNamedParameter(0, Connection::PARAM_INT)
+            ->select('uid', 'pid', 'subject', 'scheduled', 'tstamp', 'issent', 'renderedsize', 'attachment', 'type')
+            ->from($this->table)
+            ->where(
+                $queryBuilder->expr()->eq(
+                    'pid',
+                    $queryBuilder->createNamedParameter($pid, Connection::PARAM_INT)
+                ),
+                $queryBuilder->expr()->gt(
+                    'scheduled',
+                    $queryBuilder->createNamedParameter(0, Connection::PARAM_INT)
+                ),
+                $queryBuilder->expr()->eq(
+                    $this->table . '.issent',
+                    $queryBuilder->createNamedParameter(0, Connection::PARAM_INT)
+                ),
             )
-        )
-        ->orderBy($sOrder, $ascDesc)
-        ->executeQuery()
-        ->fetchAllAssociative();
+            ->orderBy('scheduled', 'DESC')
+            ->executeQuery()
+            ->fetchAllAssociative();
     }
+
 
     /**
      * @return int

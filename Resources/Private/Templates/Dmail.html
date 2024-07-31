@@ -17,7 +17,8 @@
 <f:flashMessages queueIdentifier="DmailQueue" />
 <f:render partial="Main" arguments="{dmLinks: dmLinks}" section="DMLinks" />
 <f:variable name="lll" value="LLL:EXT:direct_mail/Resources/Private/Language/locallang_mod2-6.xlf:" />
-<div class="typo3-fullDoc">
+<h1><f:translate key="{lll}header_directmail" /></h1>
+<div class="typo3-fullDoc direct_mail">
     <div class="module-body t3js-module-body">
         <form action="" method="post" name="dmailform" enctype="multipart/form-data">
 	        <f:render arguments="{navigation: data.navigation}" section="Navigation" />
@@ -388,7 +389,7 @@
     <h3>
         <f:translate key="{lll}{data.title}"/>
         <button type="button"
-            class="btn btn-lg btn-light"
+            class="btn btn-lg btn-light ml-2"
             data-bs-toggle="popover"
             data-bs-trigger="focus"
             data-bs-title="{f:translate(key: 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_csh_DirectMail.xlf:select_newsletter.alttitle')}"
@@ -439,7 +440,7 @@
     <h3>
         <f:translate key="{lll}{data.title}"/>
         <button type="button"
-            class="btn btn-lg btn-light"
+            class="btn btn-lg btn-light ml-2"
             data-bs-toggle="popover"
             data-bs-trigger="focus"
             data-bs-title="{f:translate(key: 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_csh_DirectMail.xlf:create_directmail_from_url.alttitle')}"
@@ -470,6 +471,16 @@
 
 <f:section name="DefaultQuick">
     <f:variable name="lll" value="LLL:EXT:direct_mail/Resources/Private/Language/locallang_mod2-6.xlf:" />
+    <h3><f:translate key="{lll}dmail_dovsk_quickmail"/>
+        <button type="button"
+                class="btn btn-lg btn-light ml-2"
+                data-bs-toggle="popover"
+                data-bs-trigger="focus"
+                data-bs-title="{f:translate(key: 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_csh_DirectMail.xlf:select_newsletter.alttitle')}"
+                data-bs-content="{f:translate(key: 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_csh_DirectMail.xlf:select_newsletter.description')}">
+            <core:icon identifier="actions-question" size="small" />
+        </button>
+    </h3>
     <input type="hidden" name="id" value="{data.id}" />
     <f:translate key="{lll}quickmail_sender_name"/>
     <br>
@@ -495,25 +506,41 @@
 
 <f:section name="DefaultDmail">
     <f:variable name="lll" value="LLL:EXT:direct_mail/Resources/Private/Language/locallang_mod2-6.xlf:" />
-
+    <h3><f:translate key="{lll}dmail_dovsk_queue"/>
+        <button type="button"
+                class="btn btn-lg btn-light ml-2"
+                data-bs-toggle="popover"
+                data-bs-trigger="focus"
+                data-bs-title="{f:translate(key: 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_csh_DirectMail.xlf:select_newsletter.alttitle')}"
+                data-bs-content="{f:translate(key: 'LLL:EXT:direct_mail/Resources/Private/Language/locallang_csh_DirectMail.xlf:select_newsletter.description')}">
+            <core:icon identifier="actions-question" size="small" />
+        </button>
+    </h3>
     <table class="table table-striped table-hover">
 		<thead>
             <th>&nbsp;</th>
             <th><f:translate key="LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.uid" /></th>
 		    <th><f:translate key="{lll}nl_l_subject" /></th>
 		    <th><f:translate key="{lll}nl_l_lastM" /></th>
+            <th><f:translate key="{lll}stats_overview_scheduled" /></th>
+            <th><f:translate key="{lll}stats_overview_delivery_begun" /></th>
+            <th><f:translate key="{lll}stats_overview_delivery_ended" /></th>
 		    <th><f:translate key="{lll}nl_l_sent" /></th>
 		    <th><f:translate key="{lll}nl_l_size" /></th>
 		    <th><f:translate key="{lll}nl_l_attach" /></th>
 		    <th><f:translate key="{lll}nl_l_type" /></th>
 		    <th>&nbsp;</th>
 		</thead>
+
 		<f:for each="{data}" as="row">
 		    <tr class="db_list_normal">
                 <td><f:format.raw>{row.icon}</f:format.raw></td>
                 <td>{row.id}</td>
 		        <td><a class="t3-link" href="{row.link -> f:format.raw()}"><f:format.raw>{row.linkText}</f:format.raw></a></td>
 		        <td><f:format.raw>{row.tstamp}</f:format.raw></td>
+                <td><f:format.raw>{row.scheduled}</f:format.raw></td>
+                <td><f:format.raw>{row.scheduled_begin}</f:format.raw></td>
+                <td><f:format.raw>{row.scheduled_end}</f:format.raw></td>
 		        <td><f:format.raw>{row.issent}</f:format.raw></td>
 		        <td><f:format.raw>{row.renderedsize}</f:format.raw></td>
 		        <td><f:format.raw>{row.attachment}</f:format.raw></td>

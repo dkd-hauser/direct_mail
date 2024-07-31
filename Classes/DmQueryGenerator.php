@@ -15,8 +15,11 @@ namespace DirectMailTeam\DirectMail;
  * The TYPO3 project - inspiring people to share!
  */
 
+use Doctrine\DBAL\Exception as DBALException;
 use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Database\Query\QueryHelper;
+use TYPO3\CMS\Core\Database\Query\Restriction\DeletedRestriction;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Lowlevel\Database\QueryGenerator;
 use TYPO3\CMS\Lowlevel\Controller\DatabaseIntegrityController;
@@ -83,20 +86,57 @@ class DmQueryGenerator extends DatabaseIntegrityController
                 $selectQueryString = $this->getSelectQuery($queryString);
                 $connection = GeneralUtility::makeInstance(ConnectionPool::class)->getConnectionForTable($this->table);
 
-                $isConnectionMysql = strpos($connection->getServerVersion(), 'MySQL') === 0;
+                $isConnectionMysql = str_starts_with($connection->getServerVersion(), 'MySQL');
                 $fullQueryString = '';
                 try {
-                    $fullQueryString = $selectQueryString;
-                    $dataRows = $connection->executeQuery($selectQueryString)->fetchAllAssociative();
-                    //$output .= '<h2>SQL query</h2><div><code>' . htmlspecialchars($fullQueryString) . '</code></div>';
-                    $cPR = $this->getQueryResultCode($mQ, $dataRows, $this->table);
-                    $output .= '<h2>' . ($cPR['header'] ?? '') . '</h2><div>' . $cPR['content'] . '</div>';
+                    if ($mQ === 'explain' && $isConnectionMysql) {
+                        // EXPLAIN is no ANSI SQL, for now this is only executed on mysql
+                        // @todo: Move away from getSelectQuery() or model differently
+                        $fullQueryString = 'EXPLAIN ' . $selectQueryString;
+                        $dataRows = $connection->executeQuery('EXPLAIN ' . $selectQueryString)->fetchAllAssociative();
+                    } elseif ($mQ === 'count') {
+                        $queryBuilder = $connection->createQueryBuilder();
+                        $queryBuilder->getRestrictions()->removeAll();
+                        if (empty($this->MOD_SETTINGS['show_deleted'])) {
+                            $queryBuilder->getRestrictions()->add(GeneralUtility::makeInstance(DeletedRestriction::class));
+                        }
+                        $queryBuilder->count('*')
+                            ->from($this->table)
+                            ->where(QueryHelper::stripLogicalOperatorPrefix($queryString));
+                        $fullQueryString = $queryBuilder->getSQL();
+                        $dataRows = [$queryBuilder->executeQuery()->fetchOne()];
+                    } else {
+                        $fullQueryString = $selectQueryString;
+                        $dataRows = $connection->executeQuery($selectQueryString)->fetchAllAssociative();
+                    }
+                    if (!($userTsConfig['mod.']['dbint.']['disableShowSQLQuery'] ?? false)) {
+                        $output .= '<h2>SQL query</h2>';
+                        $output .= '<pre class="language-sql">';
+                        $output .=   '<code class="language-sql">';
+                        $output .=     htmlspecialchars($fullQueryString);
+                        $output .=   '</code>';
+                        $output .= '</pre>';
+                    }
+                    $cPR = $this->getQueryResultCode($mQ, $dataRows, $this->table, $request);
+                    if ($cPR['header'] ?? null) {
+                        $output .= '<h2>' . $cPR['header'] . '</h2>';
+                    }
+                    if ($cPR['content'] ?? null) {
+                        $output .= $cPR['content'];
+                    }
                 } catch (DBALException $e) {
-                    $output .= '<h2>SQL query</h2><div><code>' . htmlspecialchars($fullQueryString) . '</code></div>';
-                    $out = '<p><strong>Error: <span class="text-danger">'
-                        . htmlspecialchars($e->getMessage())
-                        . '</span></strong></p>';
-                    $output .= '<h2>SQL error</h2><div>' . $out . '</div>';
+                    if (!($userTsConfig['mod.']['dbint.']['disableShowSQLQuery'] ?? false)) {
+                        $output .= '<h2>SQL query</h2>';
+                        $output .= '<pre class="language-sql">';
+                        $output .=   '<code class="language-sql">';
+                        $output .=     htmlspecialchars($fullQueryString);
+                        $output .=   '</code>';
+                        $output .= '</pre>';
+                    }
+                    $output .= '<h2>SQL error</h2>';
+                    $output .= '<div class="alert alert-danger">';
+                    $output .= '<p class="alert-message"><strong>Error:</strong> ' . htmlspecialchars($e->getMessage()) . '</p>';
+                    $output .= '</div>';
                 }
             }
         }

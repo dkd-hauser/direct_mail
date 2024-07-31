@@ -184,6 +184,12 @@
 			<trans-unit id="dmail_dovsk_crFromUrl" resname="dmail_dovsk_crFromUrl">
 				<source>Create a new Direct Mail from external URL</source>
 			</trans-unit>
+            <trans-unit id="dmail_dovsk_quickmail" resname="dmail_quickmail">
+                <source>Create a Quickmail</source>
+            </trans-unit>
+            <trans-unit id="dmail_dovsk_queue" resname="dmail_dovsk_queue">
+                <source>Direct Mail Queue</source>
+            </trans-unit>
 			<trans-unit id="dmail_edit" resname="dmail_edit">
 				<source>Edit</source>
 			</trans-unit>

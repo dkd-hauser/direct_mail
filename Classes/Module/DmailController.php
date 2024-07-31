@@ -13,6 +13,7 @@ use DirectMailTeam\DirectMail\Repository\FeGroupsRepository;
 use DirectMailTeam\DirectMail\Repository\FeUsersRepository;
 use DirectMailTeam\DirectMail\Repository\PagesRepository;
 use DirectMailTeam\DirectMail\Repository\SysDmailGroupRepository;
+use DirectMailTeam\DirectMail\Repository\SysDmailMaillogRepository;
 use DirectMailTeam\DirectMail\Repository\SysDmailRepository;
 use DirectMailTeam\DirectMail\Repository\TempRepository;
 use DirectMailTeam\DirectMail\Repository\TtAddressRepository;
@@ -610,6 +611,7 @@ final class DmailController extends MainController
      */
     protected function getNews(): array
     {
+      //  $rows = GeneralUtility::makeInstance(SysDmailRepository::class)->selectSysDmailsByPid($this->id);
         $rows = GeneralUtility::makeInstance(PagesRepository::class)->selectPagesForDmail($this->id, $this->perms_clause);
         $data = [];
         $empty = $rows === [];
@@ -647,8 +649,8 @@ final class DmailController extends MainController
 
                     $serializedAttributes = GeneralUtility::implodeAttributes([
                         'href' => '#',
-                        'data-dispatch-action' => $attributes['dispatch-action'],
-                        'data-dispatch-args' => $attributes['dispatch-args'],
+                        'data-dispatch-action' => isset($attributes['dispatch-action']) ? $attributes['dispatch-action'] : '',
+                        'data-dispatch-args' => isset($attributes['dispatch-args']) ? $attributes['dispatch-args'] : '',
                         'title' => htmlentities($this->languageService->sL($this->lllFile . ':nl_viewPage_HTML') . $langTitle),
                     ], true);
 
@@ -661,11 +663,11 @@ final class DmailController extends MainController
                         ->buildDispatcherDataAttributes([]);
 
                     $serializedAttributes = GeneralUtility::implodeAttributes([
-                            'href' => '#',
-                            'data-dispatch-action' => $attributes['dispatch-action'],
-                            'data-dispatch-args' => $attributes['dispatch-args'],
-                            'title' => htmlentities($this->languageService->sL($this->lllFile . ':nl_viewPage_TXT') . $langTitle),
-                        ], true);
+                        'href' => '#',
+                        'data-dispatch-action' => isset($attributes['dispatch-action']) ? $attributes['dispatch-action'] : '',
+                        'data-dispatch-args' => isset($attributes['dispatch-args']) ? $attributes['dispatch-args'] : '',
+                        'title' => htmlentities($this->languageService->sL($this->lllFile . ':nl_viewPage_TXT') . $langTitle),
+                    ], true);
 
                     $previewTextLink .= '<a href="#" ' . $serializedAttributes . '>' . $plainIcon . '</a>';
                     $createLink .= '<a href="' . $createDmailLink . $createLangParam . '" title="' . htmlentities($this->languageService->sL($this->lllFile . ':nl_create') . $langTitle) . '">' . $createIcon . '</a>';
@@ -708,6 +710,8 @@ final class DmailController extends MainController
 
         return ['empty' => $empty, 'rows' => $data];
     }
+
+
 
     /**
      * Get available languages for a page
@@ -794,6 +798,8 @@ final class DmailController extends MainController
                 $ascDesc = 'DESC';
             }
         }
+
+    //    $rows = GeneralUtility::makeInstance(SysDmailRepository::class)->selectSysDmailsByPid($this->id);
         $rows = GeneralUtility::makeInstance(SysDmailRepository::class)->selectForMkeListDMail($this->id, $sOrder, $ascDesc);
 
         $data = [];
@@ -803,6 +809,9 @@ final class DmailController extends MainController
                 'icon' => $this->iconFactory->getIconForRecord('sys_dmail', $row, Icon::SIZE_SMALL)->render(),
                 'link' => $this->linkDMailRecord($row['uid']),
                 'linkText' => htmlspecialchars($row['subject'] ?: '_'),
+                'scheduled'       => BackendUtility::datetime($row['scheduled']),
+
+                'sent'            => $this->getSysDmailMaillogsCountres($row['uid']),
                 'tstamp' => BackendUtility::date($row['tstamp']),
                 'issent' => ($row['issent'] ? $this->languageService->sL($this->lllFile . ':dmail_yes') : $this->languageService->sL($this->lllFile . ':dmail_no')),
                 'renderedsize' => ($row['renderedsize'] ? GeneralUtility::formatSize($row['renderedsize']) : ''),
@@ -815,6 +824,19 @@ final class DmailController extends MainController
         return $data;
     }
 
+    protected function getSysDmailMaillogsCountres(int $uid): int
+    {
+        $countres = GeneralUtility::makeInstance(SysDmailMaillogRepository::class)->countSysDmailMaillogs($uid);
+        $count = 0;
+        //@TODO
+        if (is_array($countres)) {
+            foreach ($countres as $cRow) {
+                $count = (int)$cRow['COUNT(*)'];
+            }
+        }
+
+        return $count;
+    }
     /**
      * Creates a directmail entry in th DB.
      * used only for quickmail.

@@ -7,9 +7,9 @@
     <f:render partial="Main" arguments="{dmLinks: dmLinks}" section="DMLinks" />
     <f:if condition="{implodedParams -> f:count()}">
         <h1><f:translate key="LLL:EXT:direct_mail/Resources/Private/Language/locallang_mod2-6.xlf:header_conf" /></h1>
-        <div id="pageTS">
+        <div id="pageTS" class="direct_mail">
             <input type="hidden" id="dm-page-uid" name="dm-page-uid" value="{uid}">
-            <button class="btn btn-default" type="submit" name="submit" id="save-configuration">!!! TEST !!! <f:translate key="LLL:EXT:direct_mail/Resources/Private/Language/locallang_mod2-6.xlf:configure_update_configuration" /></button>
+            <button class="btn btn-default" type="submit" name="submit" id="save-configuration">!!! TEST !!! <f:translate key="LLL:EXT:direct_mail/Resources/Private/Language/locallang_mod2-6.xlf:configure_update_configuration" /></button><br><br>
             <form action="" method="post" name="dmailform" enctype="multipart/form-data">
                 <f:render
                     arguments="{
@@ -109,7 +109,7 @@
     <f:variable name="contentAdditional" value="" />
     <f:if condition="{content2} != ''"><f:variable name="contentAdditional"> <f:translate key="{content2}" /></f:variable></f:if>
     &nbsp;
-    <button type="button" class="btn btn-sm btn-outline-dark" data-bs-trigger="hover" data-bs-toggle="popover" data-bs-title="{f:translate(key: '{title}')}" data-bs-content="{f:translate(key: '{content}')}{contentAdditional}">
+    <button type="button" class="btn btn-sm btn-light ml-2" data-bs-trigger="hover" data-bs-toggle="popover" data-bs-title="{f:translate(key: '{title}')}" data-bs-content="{f:translate(key: '{content}')}{contentAdditional}">
         <core:icon identifier="actions-system-help-open" size="small" />
     </button>
     <br>
