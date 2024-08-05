@@ -65,10 +65,10 @@ div.toggleTitle a img {
 	font-weight: bold; margin-top: -3px; color: #000; margin-top: 0; padding-left: 20px; 
 }
 
-button.btn {
+.direct_mail button.btn {
 	margin-bottom: 20px;
 }
 
-button.ml-2  {
+.direct_mail button.ml-2  {
 	margin-left: 20px;
 }
