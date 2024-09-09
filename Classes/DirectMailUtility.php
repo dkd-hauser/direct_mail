@@ -301,8 +301,8 @@ class DirectMailUtility
     public static function getFullUrlsForDirectMailRecord(array $row): array
     {
         // Finding the domain to use
-        if (!$_SERVER['HTTP_HOST']) {
-            // In CLI / Scheduler context, $_SERVER['HTTP_HOST'] can be null
+        if (!isset($_SERVER['HTTP_HOST'])) {
+            // In CLI / Scheduler context, $_SERVER['HTTP_HOST'] can be null or missing
             $siteFinder = GeneralUtility::makeInstance(SiteFinder::class);
             $site = $siteFinder->getSiteByPageId((int)$row['page']);
             $_SERVER['HTTP_HOST'] = $site->getBase()->getHost();
