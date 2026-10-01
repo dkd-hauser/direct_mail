@@ -27,6 +27,8 @@ use TYPO3\CMS\Core\Messaging\FlashMessage;
 use TYPO3\CMS\Core\Messaging\FlashMessageRendererResolver;
 use TYPO3\CMS\Core\Resource\FileReference;
 use TYPO3\CMS\Core\Resource\FileRepository;
+use TYPO3\CMS\Core\Exception\SiteNotFoundException;
+use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Type\ContextualFeedbackSeverity;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -97,6 +99,20 @@ class DirectMailUtility
     ): string {
         $typolinkPageUrl = 't3://page?uid=';
         $cObj = GeneralUtility::makeInstance(ContentObjectRenderer::class);
+        // The ContentObjectRenderer requires a request, in CLI / scheduler context there is none
+        $request = $GLOBALS['TYPO3_REQUEST'] ?? new ServerRequest();
+        $pageId = (int)$parameter;
+        if ($pageId > 0 && !$request->getAttribute('site')) {
+            try {
+                $request = $request->withAttribute(
+                    'site',
+                    GeneralUtility::makeInstance(SiteFinder::class)->getSiteByPageId($pageId)
+                );
+            } catch (SiteNotFoundException) {
+                // Typolink falls back to the default behaviour
+            }
+        }
+        $cObj->setRequest($request);
 
         return $cObj->typolink_URL([
             'parameter' => $typolinkPageUrl . $parameter,
