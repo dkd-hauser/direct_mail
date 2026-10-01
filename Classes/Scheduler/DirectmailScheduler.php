@@ -34,10 +34,6 @@ class DirectmailScheduler extends \TYPO3\CMS\Scheduler\Task\AbstractTask
      */
     public function execute()
     {
-        trigger_error(
-            'will be removed in TYPO3 v12.0. Use DirectmailCommand instead.',
-            E_USER_DEPRECATED
-        );
         /* @var $htmlmail \DirectMailTeam\DirectMail\Dmailer */
         $htmlmail = GeneralUtility::makeInstance(Dmailer::class);
         $htmlmail->start();

@@ -85,8 +85,6 @@ class MainController
         protected readonly IconFactory $iconFactory,
         protected readonly PageRenderer $pageRenderer
     ) {
-        $this->getLanguageService()->includeLLFile('EXT:direct_mail/Resources/Private/Language/locallang_mod2-6.xlf');
-        $this->getLanguageService()->includeLLFile('EXT:direct_mail/Resources/Private/Language/locallang_csh_sysdmail.xlf');
     }
 
     protected function init(ServerRequestInterface $request): void
@@ -450,11 +448,10 @@ class MainController
         // Finding tree and offer setting of values recursively.
         $tree = GeneralUtility::makeInstance(PageTreeView::class);
         $tree->init(empty($perms_clause) ? ''  : 'AND ' . $perms_clause);
-        $tree->makeHTML = 0;
-        $tree->setRecs = 0;
+        $tree->makeHTML = false;
         $tree->getTree($id, $getLevels, '');
 
-        return $tree->ids;
+        return array_map(static fn(array $node): int => (int)$node['row']['uid'], $tree->tree);
     }
 
     protected function countRecipients(array $idLists): int

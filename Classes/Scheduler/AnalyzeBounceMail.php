@@ -171,10 +171,6 @@ class AnalyzeBounceMail extends AbstractTask
      */
     public function execute()
     {
-        trigger_error(
-            'will be removed in TYPO3 v12.0. Use AnalyzeBounceMailCommand instead.',
-            E_USER_DEPRECATED
-        );
         // try connect to mail server
         $mailServer = $this->connectMailServer();
         if ($mailServer instanceof Server) {
@@ -258,7 +254,7 @@ class AnalyzeBounceMail extends AbstractTask
                 $connection->insert('sys_dmail_maillog', $insertFields);
                 $sql_insert_id = $connection->lastInsertId();
                 return (bool)$sql_insert_id;
-            } catch (\Doctrine\DBAL\DBALException $e) {
+            } catch (\Doctrine\DBAL\Exception $e) {
                 // Log $e->getMessage();
                 return false;
             }

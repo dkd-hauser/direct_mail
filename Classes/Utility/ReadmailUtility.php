@@ -374,9 +374,7 @@ class ReadmailUtility
         // Content type, first value is supposed to be the mime-type,
         // whatever after the first is something else.
         $outValue['_MIME_TYPE'] = $cTypeParts[0];
-        reset($cTypeParts);
-        next($cTypeParts);
-        while (list(, $v) = each($cTypeParts)) {
+        foreach (array_slice($cTypeParts, 1) as $v) {
             $reg = '';
             preg_match('/([^=]*)="(.*)"/i', $v, $reg);
             if (trim($reg[1]) && trim($reg[2])) {
