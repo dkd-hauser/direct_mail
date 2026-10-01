@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace DirectMailTeam\DirectMail\Module;
 
 use DirectMailTeam\DirectMail\Utility\TsUtility;
-use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
@@ -125,65 +124,6 @@ final class ConfigurationController extends MainController
         }
 
         return $view->renderResponse('Configuration');
-    }
-
-    /**
-     * @return ResponseFactoryInterface
-     */
-    protected function getResponseFactory(): ResponseFactoryInterface
-    {
-        return GeneralUtility::makeInstance(ResponseFactoryInterface::class);
-    }
-
-    public function updateConfigAction(ServerRequestInterface $request): ?ResponseInterface
-    {
-        $this->id = (int)($request->getParsedBody()['uid'] ?? 0);
-        $permsClause = $this->getBackendUser()->getPagePermsClause(Permission::PAGE_SHOW);
-        $pageAccess = BackendUtility::readPageAccess($this->id, $permsClause);
-        $this->pageinfo = is_array($pageAccess) ? $pageAccess : [];
-        $this->access = is_array($this->pageinfo);
-
-
-        if (($this->id && $this->access) || ($this->isAdmin() && !$this->id)) {
-            if ($this->getBackendUser()->doesUserHaveAccess(BackendUtility::getRecord('pages', $this->id), 2)) {
-                $this->languageService = $this->getLanguageService();
-                $this->pageTS = $request->getParsedBody()['pageTS'] ?? [];
-
-
-
-                foreach(['includeMedia', 'flowedFormat', 'use_rdct', 'long_link_mode', 'enable_jump_url', 'jumpurl_tracking_privacy', 'enable_mailto_jump_url', 'showContentTitle', 'prependContentTitle'] as $checkboxName) {
-                    if(!isset($this->pageTS[$checkboxName])) {
-                        $this->pageTS[$checkboxName] = '0';
-                    }
-                }
-
-                $done = false;
-                if (is_array($this->pageTS) && count($this->pageTS)) {
-                    $done = GeneralUtility::makeInstance(TsUtility::class)->updatePagesTSconfig($this->id, $this->pageTS, $this->TSconfPrefix);
-                }
-
-                if ($done) {
-                    $title = $this->languageService->sL($this->lllFile . ':mod.configuration.saved.title');
-                    $message = $this->languageService->sL($this->lllFile . ':mod.configuration.saved');
-                }
-                else {
-                    $title = $this->languageService->sL($this->lllFile . ':mod.configuration.not_saved');
-                    $message = $this->languageService->sL($this->lllFile . ':mod.configuration.not_saved.title');
-                }
-
-                $responseFactory = $this->getResponseFactory();
-                $response = $responseFactory->createResponse()->withHeader('Content-Type', 'application/json; charset=utf-8');
-                $response->getBody()->write(json_encode(['result' => [
-                    'title' => $title,
-                    'message' => $message,
-                    'type' => $done
-                ]], JSON_THROW_ON_ERROR));
-                return $response;
-
-            }
-        }
-
-        return null;
     }
 
     protected function setDefaultValues(): void
