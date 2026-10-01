@@ -72,7 +72,7 @@ final class RecipientListController extends MainController
         protected array $allowedTables = [DmailRecipientEnum::TtAddress->value, DmailRecipientEnum::FeUsers->value],
 
         protected bool $submit = false,
-        protected string $queryConfig = '',
+        protected array $queryConfig = [],
     ) {
     }
 
@@ -105,7 +105,8 @@ final class RecipientListController extends MainController
         $this->indata = $parsedBody['indata'] ?? $this->queryParams['indata'] ?? [];
         $this->submit = (bool)($parsedBody['submit'] ?? $this->queryParams['submit'] ?? false);
 
-        $this->queryConfig = (string)($parsedBody['queryConfig'] ?? $this->queryParams['queryConfig'] ?? '');
+        $queryConfig = $parsedBody['queryConfig'] ?? $this->queryParams['queryConfig'] ?? [];
+        $this->queryConfig = is_array($queryConfig) ? $queryConfig : [];
 
         $moduleTemplate = $this->moduleTemplateFactory->create($request);
         return $this->indexAction($moduleTemplate);
@@ -712,6 +713,7 @@ final class RecipientListController extends MainController
         );
         //$queryGenerator->setFormName('dmailform');
         $queryGenerator->setFormName('queryform');
+        $queryGenerator->setModSettings($this->MOD_SETTINGS);
 
         //if ($this->MOD_SETTINGS['queryTable'] && $this->MOD_SETTINGS['queryConfig']) {
         //    $queryGenerator->extFieldLists['queryFields'] = 'uid';

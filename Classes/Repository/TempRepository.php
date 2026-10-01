@@ -239,6 +239,12 @@ class TempRepository extends MainRepository
     {
         $outArr = [];
         if ($group['query']) {
+            $queryGenerator->setModSettings([
+                'queryTable' => $table,
+                'queryConfig' => $group['query'],
+                'queryLimit' => $group['queryLimit'] ?? '',
+                'search_query_makeQuery' => 'all',
+            ]);
             $select = $queryGenerator->getQueryDM((bool)$group['queryLimitDisabled']);
             //$queryGenerator->extFieldLists['queryFields'] = 'uid';
             if ($select) {

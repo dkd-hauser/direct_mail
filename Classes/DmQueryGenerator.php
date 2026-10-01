@@ -133,25 +133,35 @@ class DmQueryGenerator extends QuerySearchController
 
     public function getQueryDM(bool $queryLimitDisabled, ?ServerRequestInterface $request = null): string
     {
-        $request = $request ?? $GLOBALS['TYPO3_REQUEST'] ?? new ServerRequest();
-        $selectQueryString = '';
         $this->init('queryConfig', $this->MOD_SETTINGS['queryTable'] ?? '', '', $this->MOD_SETTINGS);
-        if ($this->formName) {
-            $this->setFormName($this->formName);
+        if (!$this->table || !is_array($GLOBALS['TCA'][$this->table] ?? null)
+            || !($this->MOD_SETTINGS['search_query_makeQuery'] ?? false)
+        ) {
+            return '';
         }
-        $tmpCode = $this->makeSelectorTable($this->MOD_SETTINGS, $request);
-        if ($this->table && is_array($GLOBALS['TCA'][$this->table])) {
-            if ($this->MOD_SETTINGS['search_query_makeQuery'] ?? false) {
-                // Show query
-                $this->enablePrefix = true;
-                $queryString = $this->getQuery($this->queryConfig);
-                if ($queryLimitDisabled) {
-                    $this->extFieldLists['queryLimit'] = '';
-                }
-                $selectQueryString = $this->getSelectQuery($queryString);
-            }
-        }
-        return $selectQueryString;
+        // Prepare the field lists like makeSelectorTable(), but without rendering the form: it creates
+        // backend URIs with form tokens, which fail without a backend session (CLI / scheduler)
+        $this->setAndCleanUpExternalLists('queryFields', 'uid', 'uid');
+        $this->setAndCleanUpExternalLists('queryGroup', '');
+        $this->setAndCleanUpExternalLists('queryOrder', '');
+        $this->extFieldLists['queryLimit'] = $queryLimitDisabled
+            ? ''
+            : (string)(($this->MOD_SETTINGS['queryLimit'] ?? '') ?: 100);
+        $queryConfig = (string)($this->MOD_SETTINGS['queryConfig'] ?? '');
+        $queryConfig = $queryConfig !== '' ? unserialize($queryConfig, ['allowed_classes' => false]) : [];
+        $this->queryConfig = $this->cleanUpQueryConfig(is_array($queryConfig) ? $queryConfig : []);
+        $this->enablePrefix = true;
+
+        return $this->getSelectQuery($this->getQuery($this->queryConfig));
+    }
+
+    /**
+     * Sets the query settings (queryTable, queryConfig, queryLimit, ...), the generator is not called
+     * as module controller, so menuConfig() never fills them from the request
+     */
+    public function setModSettings(array $modSettings): void
+    {
+        $this->MOD_SETTINGS = $modSettings;
     }
 
     public function setFormName(string $formName): void
