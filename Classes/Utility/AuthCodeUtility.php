@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace DirectMailTeam\DirectMail\Utility;
 
-use TYPO3\CMS\Core\Crypto\HashService;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 class AuthCodeUtility
@@ -44,6 +43,9 @@ class AuthCodeUtility
         }
         $preKey = implode('|', $recCopy_temp);
 
-        return GeneralUtility::makeInstance(HashService::class)->hmac($preKey, 'changeMe');
+        // Same algorithm as GeneralUtility::hmac() of TYPO3 <= 12 (HMAC-SHA1 with the encryption key), so the
+        // auth codes in mails sent before the update stay valid. HashService::hmac() requires an additional
+        // secret and would result in different codes.
+        return hash_hmac('sha1', $preKey, (string)($GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey'] ?? ''));
     }
 }
