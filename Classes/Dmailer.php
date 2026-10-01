@@ -1263,7 +1263,7 @@ class Dmailer implements LoggerAwareInterface
                 $info[] = [
                     'src' => $attributes['src'],
                     'name' => $attributes['name'],
-                    'absRef' => $this->absRef($frame['src']),
+                    'absRef' => $this->absRef($attributes['src'] ?? ''),
                 ];
             }
 

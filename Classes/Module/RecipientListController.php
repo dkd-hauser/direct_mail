@@ -250,6 +250,7 @@ final class RecipientListController extends MainController
     protected function compileMailGroup(int $groupUid): array
     {
         $idLists = [];
+        $mailGroup = [];
         if ($groupUid) {
             $mailGroup = BackendUtility::getRecord('sys_dmail_group', $groupUid);
             if (is_array($mailGroup) && $mailGroup['pid'] == $this->id) {
@@ -735,6 +736,7 @@ final class RecipientListController extends MainController
         if (!in_array($this->table, [DmailRecipientEnum::TtAddress->value, DmailRecipientEnum::FeUsers->value])) {
             return [];
         }
+        $dataout = [];
         if ($this->submit) {
             if (count($this->indata) < 1) {
                 $this->indata['html'] = 0;

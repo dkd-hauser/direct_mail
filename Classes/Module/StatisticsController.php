@@ -38,6 +38,11 @@ final class StatisticsController extends MainController
 
     protected array $categories = [];
 
+    /**
+     * Output of the statistics, accessible for the "cmd_stats" hooks
+     */
+    public string $output = '';
+
     public function __construct(
         protected readonly ModuleTemplateFactory $moduleTemplateFactory,
         protected readonly IconFactory $iconFactory,
@@ -312,6 +317,7 @@ final class StatisticsController extends MainController
      */
     protected function displayUserInfo(): array
     {
+        $data = [];
         if ($this->submit) {
             if (count($this->indata) < 1) {
                 $this->indata['html'] = 0;
@@ -623,12 +629,12 @@ final class StatisticsController extends MainController
         arsort($urlCounter['plain']);
         reset($urlCounter['total']);
 
+        $htmlLinks = [];
         // HTML mails
         if ((int)($row['sendOptions']) & 0x2) {
-            $htmlContent = $unpackedMail['html']['content'];
+            $htmlContent = $unpackedMail['html']['content'] ?? '';
 
-            $htmlLinks = [];
-            if (is_array($unpackedMail['html']['hrefs'])) {
+            if (is_array($unpackedMail['html']['hrefs'] ?? null)) {
                 foreach ($unpackedMail['html']['hrefs'] as $jumpurlId => $data) {
                     $htmlLinks[$jumpurlId] = [
                         'url'   => $data['ref'],
@@ -638,12 +644,14 @@ final class StatisticsController extends MainController
             }
 
             // Parse mail body
-            $dom = new \DOMDocument();
-            @$dom->loadHTML($htmlContent);
             $links = [];
-            // Get all links
-            foreach ($dom->getElementsByTagName('a') as $node) {
-                $links[] = $node;
+            if ($htmlContent !== '') {
+                $dom = new \DOMDocument();
+                @$dom->loadHTML($htmlContent);
+                // Get all links
+                foreach ($dom->getElementsByTagName('a') as $node) {
+                    $links[] = $node;
+                }
             }
 
             // Process all links found
@@ -689,13 +697,13 @@ final class StatisticsController extends MainController
             // $id is the jumpurl ID
             $origId = $id;
             $id     = abs((int)$id);
-            $url    = $htmlLinks[$id]['url'] ? $htmlLinks[$id]['url'] : $urlArr[$origId];
+            $url    = ($htmlLinks[$id]['url'] ?? '') ?: ($urlArr[$origId] ?? '');
 
             // a link to this host?
             $uParts = @parse_url($url);
             $urlstr = $this->getUrlStr($uParts);
 
-            $label = $this->getLinkLabel($url, $urlstr, false, $htmlLinks[$id]['label']);
+            $label = $this->getLinkLabel($url, $urlstr, false, $htmlLinks[$id]['label'] ?? '');
             $img = '<a href="' . $urlstr . '" target="_blank">' . $iconAppsToolbarMenuSearch . '</a>';
 
             if (isset($urlCounter['html'][$id]['plainId'])) {
@@ -725,20 +733,22 @@ final class StatisticsController extends MainController
         // go through all links that were not clicked yet and that have a label
         $clickedLinks = array_keys($urlCounter['total']);
         foreach ($urlArr as $id => $link) {
-            if (!in_array($id, $clickedLinks) && (isset($htmlLinks['id']))) {
+            if (!in_array($id, $clickedLinks) && isset($htmlLinks[$id])) {
+                $html = true;
                 // a link to this host?
                 $uParts = @parse_url($link);
                 $urlstr = $this->getUrlStr($uParts);
 
                 $label = $htmlLinks[$id]['label'] . ' (' . ($urlstr ? $urlstr : '/') . ')';
                 $img = '<a href="' . htmlspecialchars($link) . '" target="_blank">' . $iconAppsToolbarMenuSearch . '</a>';
+                // links which were not clicked have no counters
                 $tblLines[] = [
                     $label,
                     ($html ? $id : '-'),
                     ($html ? '-' : abs($id)),
-                    ($html ? $urlCounter['html'][$id]['counter'] : $urlCounter['plain'][$id]['counter']),
-                    $urlCounter['html'][$id]['counter'],
-                    $urlCounter['plain'][$id]['counter'],
+                    ($html ? ($urlCounter['html'][$id]['counter'] ?? 0) : ($urlCounter['plain'][$id]['counter'] ?? 0)),
+                    $urlCounter['html'][$id]['counter'] ?? 0,
+                    $urlCounter['plain'][$id]['counter'] ?? 0,
                     $img,
                 ];
             }
@@ -1549,7 +1559,8 @@ final class StatisticsController extends MainController
         if (is_array($urlParts) && isset($urlParts['host']) && $this->siteUrl == $urlParts['host']) {
             $m = [];
             // do we have an id?
-            if (preg_match('/(?:^|&)id=([0-9a-z_]+)/', $urlParts['query'], $m)) {
+            if (preg_match('/(?:^|&)id=([0-9a-z_]+)/', $urlParts['query'] ?? '', $m)) {
+                $uid = 0;
                 $isInt = MathUtility::canBeInterpretedAsInteger($m[1]);
                 if ($isInt) {
                     $uid = (int)$m[1];
